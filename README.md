@@ -3,7 +3,7 @@
 เว็บแอปพลิเคชันสำหรับจัดตารางงานพนักงานรายสัปดาห์ (จันทร์–สัปดาห์)
 รองรับ **มือถือเป็นหลัก (Mobile-first)** และ **Responsive**
 
-- 🌐 **เวอร์ชันออนไลน์:** https://zetxero-main.github.io/shiftmate/
+- 🌐 **เวอร์ชันออนไลน์:** https://zetxero-ceo.github.io/shiftmate/
 - 💾 **โหมดหลัก:** ทำงานฝั่ง Client 100% เก็บข้อมูลใน `localStorage` (ไม่ต้องมีเซิร์ฟเวอร์)
 - 🐍 **โหมดเสริม:** มี Backend API (Flask + SQLite) และเครื่องมือสำรองข้อมูลให้ใช้ได้เช่นกัน (ดูหัวข้อ [Backend API](#-backend-api-ไม่บังคับ))
 
