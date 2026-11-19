@@ -20,16 +20,28 @@
  * 1. ตัวแปรสี/ขนาด และ Reset
  * ===================================================================== */
 :root {
+  color-scheme: dark;        /* ให้ช่องวันที่/เวลา/select ของเบราว์เซอร์เป็นธีมมืดด้วย */
   --c-header: #0f0f23;       /* สี header / nav - ฟ้ามidian */
   --c-primary: #00d4ff;      /* สีหลัก - ฟ้าขนนีออน */
   --c-primary-dark: #00a8cc;
   --c-bg: #0d0d20;           /* สีพื้นหลัง - กระดี่อวกาศ */
   --c-card: #1a1a30;         /* สีบัตร/การ์ด */
   --c-text: #e8e8f0;         /* สีข้อความ - ขาวอ่อน */
-  --c-muted: #6a6a8c;        /* สีโทนรอง */
+  --c-muted: #9a9abc;        /* สีโทนรอง (contrast ≥ 4.5:1 บนทุกพื้น) */
   --c-border: #3d3d5d;       /* สีขอบ */
   --c-line: #555577;         /* สีเส้นแบ่ง */
   --c-danger: #ff6b6b;       /* สีเตือน */
+
+  /* พื้นผิวของปุ่ม/ช่องกรอก/สถานะ สำหรับธีมมืด */
+  --c-surface: #22223d;      /* ปุ่ม, ตัวเลือก, หัวตาราง */
+  --c-surface-hover: #2c2c4d;
+  --c-on-primary: #0d0d20;   /* ข้อความบนพื้นสีหลัก (ขาวบนฟ้านีออนอ่านไม่ออก) */
+  --c-info-bg: rgba(0, 212, 255, 0.12);
+  --c-danger-bg: rgba(255, 107, 107, 0.14);
+  --c-warn-bg: rgba(255, 209, 102, 0.12);
+  --c-ok: #4cd18a;
+  --c-ok-bg: rgba(76, 209, 138, 0.12);
+  --c-ot: #c39bff;           /* ป้าย OT */
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -183,7 +195,7 @@ button {
 
 .nav-btn.active {
   background: var(--c-primary);
-  color: #fff;
+  color: var(--c-on-primary);
   font-weight: 700;
 }
 
@@ -199,7 +211,7 @@ button {
   flex-direction: column;
   gap: 8px;
   padding: 8px 12px;
-  background: #fff;
+  background: var(--c-card);
   border-bottom: 1px solid var(--c-border);
 }
 
@@ -214,9 +226,9 @@ button {
   display: inline-flex;
   flex: none;
   overflow: hidden;
-  border: 1px solid #cfd8dc;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--c-surface);
 }
 
 .seg-btn {
@@ -224,7 +236,7 @@ button {
   min-height: 44px;
   padding: 0 12px;
   border: 0;
-  border-right: 1px solid #cfd8dc;
+  border-right: 1px solid var(--c-border);
   background: transparent;
   font-weight: 600;
 }
@@ -235,7 +247,7 @@ button {
 
 .seg-btn.active {
   background: var(--c-primary);
-  color: #fff;
+  color: var(--c-on-primary);
 }
 
 .date-label {
@@ -276,7 +288,7 @@ button {
   padding: 0 16px;
   border: 1px solid transparent;
   border-radius: 10px;
-  background: #fff;
+  background: var(--c-surface);
   font-weight: 600;
   text-align: center;
   text-decoration: none;
@@ -285,7 +297,7 @@ button {
 
 .btn-primary {
   background: var(--c-primary);
-  color: #fff;
+  color: var(--c-on-primary);
 }
 
 .btn-primary:hover,
@@ -294,26 +306,26 @@ button {
 }
 
 .btn-outline {
-  border-color: #cfd8dc;
-  background: #fff;
+  border-color: var(--c-border);
+  background: var(--c-surface);
   color: var(--c-text);
 }
 
 .btn-outline:hover,
 .btn-outline:active {
-  background: #f2f5f7;
+  background: var(--c-surface-hover);
 }
 
 .btn-icon {
   flex: none;
   width: 44px;
   padding: 0;
-  border: 1px solid #cfd8dc;
-  background: #fff;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
 }
 
 .btn-icon:active {
-  background: #f2f5f7;
+  background: var(--c-surface-hover);
 }
 
 .btn-block {
@@ -426,9 +438,9 @@ button {
   width: 100%;
   min-height: 44px;
   padding: 0 12px;
-  border: 1px solid #cfd8dc;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--c-bg);
   font-size: 16px; /* กัน iOS ซูมหน้าจออัตโนมัติ */
 }
 
@@ -440,7 +452,7 @@ button {
 
 .input.invalid {
   border-color: var(--c-danger);
-  background: #fdecea;
+  background: var(--c-danger-bg);
 }
 
 .input-color {
@@ -459,9 +471,9 @@ button {
   gap: 10px;
   min-height: 44px;
   padding: 0 12px;
-  border: 1px solid #dfe6e9;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: #f8fafb;
+  background: var(--c-surface);
   font-weight: 600;
   cursor: pointer;
 }
@@ -474,8 +486,8 @@ button {
 }
 
 #assignOTRow .check-label {
-  border-color: #ffe08a;
-  background: #fff8e1;
+  border-color: rgba(255, 209, 102, 0.45);
+  background: var(--c-warn-bg);
 }
 
 /* ปุ่มเลือกไฟล์นำเข้า: ซ่อน input จริงไว้ ใช้ label เป็นปุ่มแทน */
@@ -515,7 +527,7 @@ button {
   min-height: 180px;
   max-height: calc(100vh - var(--header-total) - var(--nav-h) - var(--toolbar-h) - 24px);
   overflow: auto;
-  background: #fff;
+  background: var(--c-card);
   border: 1px solid var(--c-border);
   border-radius: 12px;
   -webkit-overflow-scrolling: touch;
@@ -547,7 +559,7 @@ button {
   top: 0;
   z-index: 2;
   padding: 6px 4px;
-  background: #f4f6f8;
+  background: var(--c-surface);
   text-align: center;
   font-weight: 600;
 }
@@ -560,8 +572,8 @@ button {
   min-width: 108px;
   max-width: 150px;
   padding: 6px 8px;
-  background: #fff;
-  border-right: 2px solid #cfd8dc;
+  background: var(--c-card);
+  border-right: 2px solid var(--c-border);
   box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.15);
   text-align: left;
 }
@@ -569,7 +581,7 @@ button {
 /* มุมซ้ายบน: sticky ทั้งบนและซ้าย ต้องอยู่เหนือทุกเซลล์ */
 .sched-table thead th.sticky-col.corner {
   z-index: 3;
-  background: #e8edf1;
+  background: var(--c-surface-hover);
 }
 
 .dow {
@@ -587,7 +599,7 @@ button {
 
 .date-head.weekend .dow,
 .date-head.weekend .dom {
-  color: #c0392b;
+  color: var(--c-danger);
 }
 
 .sched-table thead th.date-head.today {
@@ -596,7 +608,7 @@ button {
 
 .date-head.today .dow,
 .date-head.today .dom {
-  color: #fff;
+  color: var(--c-on-primary);
 }
 
 /* เซลล์ข้อมูล */
@@ -607,7 +619,7 @@ button {
 }
 
 .sched-table td.cell.today {
-  background: #eef7fd;
+  background: var(--c-info-bg);
 }
 
 .emp-name {
@@ -675,11 +687,11 @@ button {
 }
 
 .cell-btn:active {
-  background: rgba(52, 152, 219, 0.14);
+  background: rgba(0, 212, 255, 0.16);
 }
 
 .cell-empty {
-  color: #b8c2cc;
+  color: var(--c-muted);
   font-size: 1.05rem;
 }
 
@@ -701,9 +713,9 @@ button {
   width: 100%;
   min-height: 36px;
   padding: 4px 8px;
-  border: 1px solid #d4e6f1;
+  border: 1px solid rgba(0, 212, 255, 0.35);
   border-radius: 8px;
-  background: #eaf2f8;
+  background: var(--c-info-bg);
   color: var(--c-text);
   font-size: 0.8rem;
   font-weight: 600;
@@ -714,11 +726,11 @@ button {
 }
 
 .name-item:active {
-  background: #d6eaf8;
+  background: rgba(0, 212, 255, 0.24);
 }
 
 .ot-tag {
-  color: #8e44ad;
+  color: var(--c-ot);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -728,14 +740,14 @@ button {
   width: 100%;
   min-height: 32px;
   margin-top: 4px;
-  border: 1px dashed #c8d1da;
+  border: 1px dashed var(--c-border);
   border-radius: 8px;
   background: transparent;
-  color: #a5b1bc;
+  color: var(--c-muted);
 }
 
 .cell-add:active {
-  background: rgba(52, 152, 219, 0.14);
+  background: rgba(0, 212, 255, 0.16);
 }
 
 /* เซลล์ว่าง: ปุ่ม ＋ เต็มช่อง */
@@ -779,12 +791,12 @@ td.cell > .cell-add:only-child {
 }
 
 .chip-unknown {
-  background: #bdc3c7;
-  color: #fff;
+  background: var(--c-line);
+  color: var(--c-text);
 }
 
 .chip-none {
-  background: #ecf0f1;
+  background: var(--c-surface);
   color: var(--c-muted);
 }
 
@@ -850,7 +862,7 @@ td.cell > .cell-add:only-child {
 
 .card-sub {
   margin-top: 2px;
-  color: #566573;
+  color: var(--c-muted);
   font-size: 0.92rem;
 }
 
@@ -861,7 +873,7 @@ td.cell > .cell-add:only-child {
 }
 
 .card-meta a {
-  color: #2980b9;
+  color: var(--c-primary);
   text-decoration: none;
 }
 
@@ -877,32 +889,32 @@ td.cell > .cell-add:only-child {
   justify-content: center;
   width: 44px;
   height: 44px;
-  border: 1px solid #cfd8dc;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: #fff;
-  color: #34495e;            /* สีเข้มตายตัว เพราะพื้นปุ่มเป็นสีขาว */
+  background: var(--c-surface);
+  color: var(--c-text);
   font-size: 1.2rem;
   line-height: 1;
 }
 
 .icon-btn.danger {
-  color: #c0392b;
+  color: var(--c-danger);
 }
 
 .icon-btn:active {
-  background: #f2f5f7;
+  background: var(--c-surface-hover);
 }
 
 .icon-btn.danger:active {
-  background: #fdecea;
+  background: var(--c-danger-bg);
   border-color: var(--c-danger);
 }
 
 .badge {
   padding: 1px 8px;
   border-radius: 6px;
-  background: #ecf0f1;
-  color: #34495e;
+  background: var(--c-surface);
+  color: var(--c-text);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -913,7 +925,7 @@ td.cell > .cell-add:only-child {
 }
 
 .tag-ot {
-  color: #8e44ad;
+  color: var(--c-ot);
   font-weight: 600;
 }
 
@@ -930,9 +942,9 @@ td.cell > .cell-add:only-child {
 /* ข้อความเมื่อยังไม่มีข้อมูล */
 .empty-state {
   padding: 32px 16px;
-  border: 2px dashed #d5dbe0;
+  border: 2px dashed var(--c-border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--c-card);
   color: var(--c-muted);
   text-align: center;
   line-height: 1.8;
@@ -957,7 +969,7 @@ td.cell > .cell-add:only-child {
 
 .result-unassigned {
   border-left-color: #95a5a6;
-  background: #fafbfc;
+  background: var(--c-surface);
 }
 
 .result-head {
@@ -974,7 +986,7 @@ td.cell > .cell-add:only-child {
 
 .result-names {
   margin-top: 8px;
-  color: #34495e;
+  color: var(--c-text);
   line-height: 1.7;
 }
 
@@ -1003,8 +1015,8 @@ td.cell > .cell-add:only-child {
   margin-bottom: 10px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: #eaf2f8;
-  color: #1f618d;
+  background: var(--c-info-bg);
+  color: var(--c-primary);
   font-weight: 700;
 }
 
@@ -1020,7 +1032,7 @@ td.cell > .cell-add:only-child {
   flex-wrap: wrap;
   gap: 4px 8px;
   padding: 6px 0;
-  border-top: 1px solid #eef1f4;
+  border-top: 1px solid var(--c-border);
 }
 
 .history-name {
@@ -1036,7 +1048,7 @@ td.cell > .cell-add:only-child {
   margin-top: 12px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: #f2f5f7;
+  background: var(--c-surface);
   line-height: 1.6;
 }
 
@@ -1045,13 +1057,13 @@ td.cell > .cell-add:only-child {
 }
 
 .import-status.ok {
-  background: #eafaf1;
-  color: #1e8449;
+  background: var(--c-ok-bg);
+  color: var(--c-ok);
 }
 
 .import-status.err {
-  background: #fdecea;
-  color: #c0392b;
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
 }
 
 
@@ -1084,7 +1096,7 @@ td.cell > .cell-add:only-child {
   max-height: 90vh;
   padding: 8px 16px 0;
   overflow-y: auto;
-  background: #fff;
+  background: var(--c-card);
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
   animation: sheet-up 0.22s ease-out;
@@ -1110,7 +1122,7 @@ td.cell > .cell-add:only-child {
   height: 4px;
   margin: 4px auto 12px;
   border-radius: 2px;
-  background: #cfd8dc;
+  background: var(--c-line);
 }
 
 .modal-title {
@@ -1128,7 +1140,7 @@ td.cell > .cell-add:only-child {
   gap: 10px;
   margin-top: 8px;
   padding: 12px 0 calc(12px + var(--safe-bottom));
-  background: #fff;
+  background: var(--c-card);
 }
 
 .modal-actions .btn {
@@ -1149,15 +1161,15 @@ td.cell > .cell-add:only-child {
   gap: 10px;
   min-height: 52px;
   padding: 8px 12px;
-  border: 1.5px solid #dfe6e9;
+  border: 1.5px solid var(--c-border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--c-surface);
   cursor: pointer;
 }
 
 .radio-item.selected {
   border-color: var(--c-primary);
-  background: #eaf4fc;
+  background: var(--c-info-bg);
 }
 
 .radio-item input {
