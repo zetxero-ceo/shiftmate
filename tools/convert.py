@@ -38,8 +38,8 @@ def json_to_csv(json_path, csv_path):
                 emp.get('phone', ''),
                 sh.get('code', ''),
                 sh.get('name', ''),
-                sh.get('start_time', sh.get('startTime', '')),
-                sh.get('end_time',   sh.get('endTime', '')),
+                sh.get('startTime', sh.get('start_time', '')),
+                sh.get('endTime',   sh.get('end_time', '')),
                 'TRUE' if entry.get('ot') else 'FALSE',
             ])
 
@@ -86,12 +86,13 @@ def csv_to_json(csv_path, json_path):
                     'id': sh_id,
                     'code': sh_code,
                     'name': row.get('shift_name', ''),
-                    'start_time': row.get('start', ''),
-                    'end_time': row.get('end', ''),
+                    'startTime': row.get('start', ''),
+                    'endTime': row.get('end', ''),
                     'color': '#3498db',
                     'overnight': False,
-                    'ot_until': None,
-                    'is_off': sh_code.upper() == 'OFF',
+                    'otUntil': None,
+                    'isOff': sh_code.upper() == 'OFF',
+                    'active': True,
                 }
 
             # schedule

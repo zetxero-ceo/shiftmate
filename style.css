@@ -884,6 +884,16 @@ td.cell > .cell-add:only-child {
   font-weight: 600;
 }
 
+/* ผลัดที่ปิดใช้งาน (soft delete) */
+.tag-inactive {
+  color: var(--c-muted);
+  font-weight: 600;
+}
+
+.card-inactive {
+  opacity: 0.6;
+}
+
 /* ข้อความเมื่อยังไม่มีข้อมูล */
 .empty-state {
   padding: 32px 16px;
