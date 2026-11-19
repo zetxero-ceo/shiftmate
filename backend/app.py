@@ -67,8 +67,9 @@ def static_files(name):
 # EMPLOYEES
 # ============================================================
 def employee_error(data):
-    if not data.get('fullname') or not data.get('position') or not data.get('phone'):
-        return jsonify({'error': 'ต้องกรอก ชื่อ, ตำแหน่ง, เบอร์โทร'}), 400
+    # เบอร์โทรไม่บังคับ
+    if not data.get('fullname') or not data.get('position'):
+        return jsonify({'error': 'ต้องกรอก ชื่อ และตำแหน่ง'}), 400
     return None
 
 
@@ -92,7 +93,7 @@ def create_employee():
             INSERT INTO employees (id, code, fullname, position, phone)
             VALUES (?, ?, ?, ?, ?)
         """, (emp_id, data.get('code', ''), data['fullname'],
-              data['position'], data['phone']))
+              data['position'], data.get('phone') or ''))
     return jsonify({**data, 'id': emp_id}), 201
 
 
@@ -108,7 +109,7 @@ def update_employee(emp_id):
             UPDATE employees SET code=?, fullname=?, position=?, phone=?
             WHERE id=?
         """, (data.get('code', ''), data['fullname'],
-              data['position'], data['phone'], emp_id))
+              data['position'], data.get('phone') or '', emp_id))
         if cur.rowcount == 0:
             return jsonify({'error': 'ไม่พบพนักงาน'}), 404
     return jsonify({**data, 'id': emp_id})
@@ -363,7 +364,7 @@ def restore():
                 INSERT INTO employees (id, code, fullname, position, phone)
                 VALUES (?, ?, ?, ?, ?)
             """, (e.get('id') or uid('emp'), e.get('code', ''),
-                  e.get('fullname', ''), e.get('position', ''), e.get('phone', '')))
+                  e.get('fullname', ''), e.get('position', ''), e.get('phone') or ''))
 
         for s in data['shifts']:
             if not isinstance(s, dict):

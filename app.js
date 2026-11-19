@@ -1105,8 +1105,8 @@ function saveEmployee(e) {
 
   if (!fullname) return invalidField('#empName', 'กรุณากรอกชื่อ-สกุล');
   if (!position) return invalidField('#empPosition', 'กรุณากรอกตำแหน่ง');
-  if (!phone) return invalidField('#empPhone', 'กรุณากรอกเบอร์โทร');
-  if (!/^[0-9+\-\s()]+$/.test(phone) || phone.replace(/\D/g, '').length < 8) {
+  // เบอร์โทรไม่บังคับ แต่ถ้ากรอกต้องเป็นรูปแบบที่ถูกต้อง
+  if (phone && (!/^[0-9+\-\s()]+$/.test(phone) || phone.replace(/\D/g, '').length < 8)) {
     return invalidField('#empPhone', 'เบอร์โทรไม่ถูกต้อง');
   }
   if (code) {
