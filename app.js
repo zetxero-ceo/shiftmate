@@ -194,6 +194,11 @@ function formatRangeLabel() {
   return s.getDate() + ' – ' + e.getDate() + ' ' + THAI_MONTHS_SHORT[e.getMonth()] + ' ' + yE;
 }
 
+// ไอคอน SVG จาก sprite ใน index.html (เช่น icon('edit') → #i-edit)
+function icon(name) {
+  return '<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-' + name + '"></use></svg>';
+}
+
 // escape ข้อความก่อนใส่ลง innerHTML เพื่อกัน XSS
 function escapeHtml(v) {
   return String(v === null || v === undefined ? '' : v)
@@ -704,7 +709,7 @@ function buildEmployeeView(dates) {
       const entry = getEntry(iso, emp.id);
       const inner = entry
         ? chipHTML(getShift(entry.shiftId), entry.ot)
-        : '<span class="cell-empty" aria-hidden="true">＋</span>';
+        : '<span class="cell-empty" aria-hidden="true">' + icon('plus') + '</span>';
       html += '<td class="cell' + (iso === todayIso ? ' today' : '') + '" data-emp="' +
         escapeHtml(emp.id) + '" data-date="' + iso + '">';
       html += '<button type="button" class="cell-btn" aria-label="กำหนดผลัด ' +
@@ -763,7 +768,7 @@ function buildShiftView(dates) {
         escapeHtml(shift.id) + '" data-date="' + iso + '">';
       if (names) html += '<div class="name-list">' + names + '</div>';
       html += '<button type="button" class="cell-add" aria-label="เพิ่มพนักงานในผลัด ' +
-        escapeHtml(shift.code) + ' ' + formatThaiDate(d) + '">＋</button>';
+        escapeHtml(shift.code) + ' ' + formatThaiDate(d) + '">' + icon('plus') + '</button>';
       html += '</td>';
     });
     html += '</tr>';
@@ -1068,13 +1073,13 @@ function renderEmployees() {
         '<div class="card-title">' + escapeHtml(emp.fullname) +
           (emp.code ? ' <span class="badge">' + escapeHtml(emp.code) + '</span>' : '') + '</div>' +
         '<div class="card-sub">' + escapeHtml(emp.position || '-') + '</div>' +
-        '<div class="card-meta">📞 ' + (emp.phone
+        '<div class="card-meta">' + icon('phone') + ' ' + (emp.phone
           ? '<a href="tel:' + escapeHtml(emp.phone.replace(/[^0-9+]/g, '')) + '">' + escapeHtml(emp.phone) + '</a>'
           : '-') + '</div>' +
       '</div>' +
       '<div class="card-actions">' +
-        '<button type="button" class="icon-btn" data-action="edit" aria-label="แก้ไข ' + escapeHtml(emp.fullname) + '">✏️</button>' +
-        '<button type="button" class="icon-btn danger" data-action="delete" aria-label="ลบ ' + escapeHtml(emp.fullname) + '">🗑️</button>' +
+        '<button type="button" class="icon-btn" data-action="edit" aria-label="แก้ไข ' + escapeHtml(emp.fullname) + '">' + icon('edit') + '</button>' +
+        '<button type="button" class="icon-btn danger" data-action="delete" aria-label="ลบ ' + escapeHtml(emp.fullname) + '">' + icon('trash') + '</button>' +
       '</div>' +
     '</article>';
   }).join('');
@@ -1190,9 +1195,9 @@ function renderShifts() {
     if (s.otUntil) sub += ' <span class="tag tag-ot">(OT ถึง ' + escapeHtml(s.otUntil) + ')</span>';
     if (!s.active) sub += ' <span class="tag tag-inactive">ปิดใช้งาน</span>';
     const actions = s.active
-      ? '<button type="button" class="icon-btn" data-action="edit" aria-label="แก้ไขผลัด ' + escapeHtml(s.code) + '">✏️</button>' +
-        '<button type="button" class="icon-btn danger" data-action="delete" aria-label="ลบผลัด ' + escapeHtml(s.code) + '">🗑️</button>'
-      : '<button type="button" class="icon-btn" data-action="restore" aria-label="เปิดใช้ผลัด ' + escapeHtml(s.code) + ' อีกครั้ง">♻️</button>';
+      ? '<button type="button" class="icon-btn" data-action="edit" aria-label="แก้ไขผลัด ' + escapeHtml(s.code) + '">' + icon('edit') + '</button>' +
+        '<button type="button" class="icon-btn danger" data-action="delete" aria-label="ลบผลัด ' + escapeHtml(s.code) + '">' + icon('trash') + '</button>'
+      : '<button type="button" class="icon-btn" data-action="restore" aria-label="เปิดใช้ผลัด ' + escapeHtml(s.code) + ' อีกครั้ง" title="เปิดใช้อีกครั้ง">' + icon('restore') + '</button>';
     return '<article class="card' + (s.active ? '' : ' card-inactive') + '" data-id="' + escapeHtml(s.id) + '">' +
       '<div class="card-main">' +
         '<div class="card-title">' + chipHTML(s, false) + ' <span>' +
@@ -1248,7 +1253,7 @@ function saveShift(e) {
     return x.id !== id && x.code.toLowerCase() === code.toLowerCase();
   });
   if (dup && !dup.active) {
-    return invalidField('#shiftCode', 'รหัสนี้เป็นของผลัดที่ปิดใช้งานอยู่ กด ♻️ ที่การ์ดเดิมเพื่อเปิดใช้อีกครั้ง');
+    return invalidField('#shiftCode', 'รหัสนี้เป็นของผลัดที่ปิดใช้งานอยู่ กดปุ่ม "เปิดใช้อีกครั้ง" ที่การ์ดเดิมแทน');
   }
   if (dup) return invalidField('#shiftCode', 'รหัสผลัดนี้ถูกใช้แล้ว');
 
