@@ -321,6 +321,31 @@ button {
   width: 100%;
 }
 
+/* ไอคอน SVG: ขนาดตามตัวอักษร สีตาม currentColor */
+.svg-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.icon {
+  flex: none;
+  width: 1.15em;
+  height: 1.15em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -0.2em;
+}
+
+.btn-icon .icon {
+  width: 1.3em;
+  height: 1.3em;
+}
+
 .btn-stack {
   display: flex;
   flex-direction: column;
@@ -847,13 +872,21 @@ td.cell > .cell-add:only-child {
 }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   height: 44px;
   border: 1px solid #cfd8dc;
   border-radius: 10px;
   background: #fff;
-  font-size: 1.1rem;
+  color: #34495e;            /* สีเข้มตายตัว เพราะพื้นปุ่มเป็นสีขาว */
+  font-size: 1.2rem;
   line-height: 1;
+}
+
+.icon-btn.danger {
+  color: #c0392b;
 }
 
 .icon-btn:active {
