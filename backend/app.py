@@ -162,28 +162,36 @@ def create_shift():
 
 @app.put('/api/shifts/<sh_id>')
 def update_shift(sh_id):
-    """แก้ไขผลัด — ส่ง active: true เพื่อเปิดใช้ผลัดที่ปิดไว้อีกครั้ง (ไม่ส่ง = คงค่าเดิม)"""
-    data = request.get_json(silent=True) or {}
-    if not data.get('code'):
-        return jsonify({'error': 'ต้องมีรหัสผลัด'}), 400
+    """
+    แก้ไขผลัด — ฟิลด์ที่ไม่ได้ส่งมาจะคงค่าเดิม (ไม่ถูกล้างเป็นค่าว่าง)
+    ส่ง active: true เพื่อเปิดใช้ผลัดที่ปิดไว้อีกครั้ง
+    """
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({'error': 'body ต้องเป็น JSON object'}), 400
+    if 'code' in data and not data['code']:
+        return jsonify({'error': 'รหัสผลัดต้องไม่ว่าง'}), 400
 
-    active = None if 'active' not in data else (1 if data['active'] else 0)
     with db() as conn:
-        cur = conn.execute("""
-            UPDATE shifts SET code=?, name=?, start_time=?, end_time=?,
-                              color=?, overnight=?, ot_until=?, is_off=?,
-                              active=COALESCE(?, active)
-            WHERE id=?
-        """, (data['code'], data.get('name', ''),
-              data.get('start_time', ''), data.get('end_time', ''),
-              data.get('color', '#3498db'),
-              1 if data.get('overnight') else 0,
-              data.get('ot_until'),
-              1 if data.get('is_off') else 0,
-              active,
-              sh_id))
-        if cur.rowcount == 0:
+        row = conn.execute("SELECT * FROM shifts WHERE id=?", (sh_id,)).fetchone()
+        if row is None:
             return jsonify({'error': 'ไม่พบผลัด'}), 404
+
+        cur = dict(row)
+        for key in ('code', 'name', 'start_time', 'end_time', 'color', 'ot_until'):
+            if key in data:
+                cur[key] = data[key]
+        for key in ('overnight', 'is_off', 'active'):
+            if key in data:
+                cur[key] = 1 if data[key] else 0
+
+        conn.execute("""
+            UPDATE shifts SET code=?, name=?, start_time=?, end_time=?,
+                              color=?, overnight=?, ot_until=?, is_off=?, active=?
+            WHERE id=?
+        """, (cur['code'], cur['name'], cur['start_time'], cur['end_time'],
+              cur['color'], cur['overnight'], cur['ot_until'], cur['is_off'],
+              cur['active'], sh_id))
         row = conn.execute("SELECT * FROM shifts WHERE id=?", (sh_id,)).fetchone()
     return jsonify(shift_row(row))
 
