@@ -49,9 +49,12 @@ def init_db():
                 color      TEXT DEFAULT '#3498db',
                 overnight  INTEGER DEFAULT 0,
                 ot_until   TEXT,
-                is_off     INTEGER DEFAULT 0
+                is_off     INTEGER DEFAULT 0,
+                active     INTEGER NOT NULL DEFAULT 1   -- 0 = ปิดใช้งาน (soft delete)
             );
 
+            -- ผลัดที่มีในตารางงานแล้วจะไม่ถูกลบจริง (ปิดใช้งานแทน)
+            -- RESTRICT กันไม่ให้ประวัติหายถ้ามีโค้ดไหนเผลอลบผลัดตรง ๆ
             CREATE TABLE IF NOT EXISTS schedule (
                 date     TEXT NOT NULL,
                 emp_id   TEXT NOT NULL,
@@ -59,11 +62,16 @@ def init_db():
                 ot       INTEGER DEFAULT 0,
                 PRIMARY KEY (date, emp_id),
                 FOREIGN KEY (emp_id)   REFERENCES employees(id) ON DELETE CASCADE,
-                FOREIGN KEY (shift_id) REFERENCES shifts(id)    ON DELETE CASCADE
+                FOREIGN KEY (shift_id) REFERENCES shifts(id)    ON DELETE RESTRICT
             );
 
             CREATE INDEX IF NOT EXISTS idx_schedule_date ON schedule(date);
         """)
+
+        # ฐานข้อมูลเก่าที่สร้างก่อนมีคอลัมน์ active → เพิ่มคอลัมน์ให้
+        cols = {r['name'] for r in conn.execute("PRAGMA table_info(shifts)")}
+        if 'active' not in cols:
+            conn.execute("ALTER TABLE shifts ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
 
         # Seed ผลัดถ้าตารางว่าง
         cur = conn.execute("SELECT COUNT(*) AS c FROM shifts")

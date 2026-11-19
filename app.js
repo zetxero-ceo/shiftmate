@@ -64,7 +64,7 @@ const DEFAULT_SHIFT_COLOR = '#3498db';
 // state กลางของแอป
 const state = {
   employees: [],            // [{ id, code, fullname, position, phone }]
-  shifts: [],               // [{ id, code, name, startTime, endTime, color, overnight, otUntil, isOff }]
+  shifts: [],               // [{ id, code, name, startTime, endTime, color, overnight, otUntil, isOff, active }]
   schedule: {},             // { "YYYY-MM-DD": { [employeeId]: { shiftId, ot } } }
   currentDate: new Date(),  // วันที่อ้างอิงของ toolbar
   viewMode: 'week',         // 'day' | 'week' | 'month'
@@ -436,7 +436,9 @@ function sanitizeShift(s, usedIds) {
     color: /^#[0-9a-fA-F]{6}$/.test(String(s.color || '')) ? String(s.color) : DEFAULT_SHIFT_COLOR,
     overnight: isOff ? false : (!!s.overnight || !!(startTime && endTime && endTime < startTime)),
     otUntil: isOff ? null : (normalizeTime(s.otUntil) || null),
-    isOff: isOff
+    isOff: isOff,
+    // ข้อมูลเก่าไม่มีฟิลด์นี้ = ใช้งานอยู่
+    active: s.active === undefined || s.active === null || s.active === '' ? true : parseBool(s.active)
   };
 }
 
@@ -527,7 +529,8 @@ function buildDefaultShifts() {
       color: s.color,
       overnight: s.overnight,
       otUntil: s.otUntil,
-      isOff: !!s.isOff
+      isOff: !!s.isOff,
+      active: true
     };
   });
 }
@@ -727,7 +730,15 @@ function buildShiftView(dates) {
   dates.forEach(function (d) { html += dateHeadHTML(d, todayIso); });
   html += '</tr></thead><tbody>';
 
-  state.shifts.forEach(function (shift) {
+  // ผลัดที่ปิดใช้งานแสดงเฉพาะเมื่อมีคนอยู่ในช่วงวันที่ที่กำลังดู
+  const usedInRange = new Set();
+  dates.forEach(function (d) {
+    const day = state.schedule[toISO(d)] || {};
+    Object.keys(day).forEach(function (empId) { usedInRange.add(day[empId].shiftId); });
+  });
+  const rows = state.shifts.filter(function (s) { return s.active || usedInRange.has(s.id); });
+
+  rows.forEach(function (shift) {
     html += '<tr><th class="sticky-col row-head" scope="row">';
     html += '<div class="shift-head">' + chipHTML(shift, false);
     if (shift.name) html += ' <span class="shift-name">' + escapeHtml(shift.name) + '</span>';
@@ -765,11 +776,12 @@ function buildShiftView(dates) {
 // แสดงคำอธิบายสีของผลัดใต้ตาราง
 function renderLegend() {
   const box = $('#shiftLegend');
-  if (state.shifts.length === 0) {
+  const shifts = state.shifts.filter(function (s) { return s.active; });
+  if (shifts.length === 0) {
     box.innerHTML = '';
     return;
   }
-  box.innerHTML = state.shifts.map(function (s) {
+  box.innerHTML = shifts.map(function (s) {
     return '<span class="legend-item">' + chipHTML(s, false) +
       '<small>' + escapeHtml((s.name ? s.name + ' ' : '') + shiftTimeText(s)) + '</small></span>';
   }).join('');
@@ -871,6 +883,8 @@ function renderAssignShiftList() {
     '<strong>ไม่ทำงาน</strong><small class="radio-time">ล้างการกำหนดผลัดของวันนี้</small>'
   );
   state.shifts.forEach(function (s) {
+    // ผลัดที่ปิดใช้งานแสดงเฉพาะถ้าเป็นผลัดที่กำหนดไว้เดิมของช่องนี้
+    if (!s.active && a.shiftId !== s.id) return;
     html += radioItemHTML(
       s.id,
       a.shiftId === s.id,
@@ -968,6 +982,10 @@ function copyFromYesterday() {
     showToast('ผลัดของเมื่อวานถูกลบไปแล้ว');
     return;
   }
+  if (!shift.active) {
+    showToast('ผลัดของเมื่อวานถูกปิดใช้งานแล้ว');
+    return;
+  }
   a.shiftId = shift.id;
   a.ot = !!entry.ot && !!shift.otUntil;
   renderAssignShiftList();
@@ -989,6 +1007,11 @@ function saveAssign(e) {
     const shift = getShift(a.shiftId);
     if (!shift) {
       showToast('ไม่พบผลัดที่เลือก');
+      return;
+    }
+    const current = getEntry(a.date, a.empId);
+    if (!shift.active && !(current && current.shiftId === shift.id)) {
+      showToast('ผลัดนี้ถูกปิดใช้งานแล้ว');
       return;
     }
     // OT ติ๊กได้เฉพาะผลัดที่มี otUntil
@@ -1147,7 +1170,8 @@ function bindEmployees() {
 
 /* =====================================================================
  * 9. Shift CRUD
- *    เพิ่ม/แก้ไข/ลบ ผลัด (ลบแล้วลบ schedule ที่ใช้ผลัดนั้นด้วย)
+ *    เพิ่ม/แก้ไข/ลบ ผลัด (ผลัดที่มีในตารางงานแล้วจะถูกปิดใช้งานแทนการลบ
+ *    เพื่อเก็บประวัติไว้ และเปิดใช้อีกครั้งได้)
  * ===================================================================== */
 
 // วาดรายการผลัดเป็นการ์ด
@@ -1157,20 +1181,25 @@ function renderShifts() {
     box.innerHTML = '<div class="empty-state">ยังไม่มีผลัด<br>กด "+ เพิ่มผลัด" เพื่อเริ่มต้น</div>';
     return;
   }
-  box.innerHTML = state.shifts.map(function (s) {
+  // ผลัดที่ใช้งานอยู่ขึ้นก่อน ผลัดที่ปิดใช้งานต่อท้าย
+  const ordered = state.shifts.filter(function (s) { return s.active; })
+    .concat(state.shifts.filter(function (s) { return !s.active; }));
+  box.innerHTML = ordered.map(function (s) {
     let sub = escapeHtml(shiftTimeText(s));
     if (isOvernight(s)) sub += ' <span class="tag">(ข้ามวัน)</span>';
     if (s.otUntil) sub += ' <span class="tag tag-ot">(OT ถึง ' + escapeHtml(s.otUntil) + ')</span>';
-    return '<article class="card" data-id="' + escapeHtml(s.id) + '">' +
+    if (!s.active) sub += ' <span class="tag tag-inactive">ปิดใช้งาน</span>';
+    const actions = s.active
+      ? '<button type="button" class="icon-btn" data-action="edit" aria-label="แก้ไขผลัด ' + escapeHtml(s.code) + '">✏️</button>' +
+        '<button type="button" class="icon-btn danger" data-action="delete" aria-label="ลบผลัด ' + escapeHtml(s.code) + '">🗑️</button>'
+      : '<button type="button" class="icon-btn" data-action="restore" aria-label="เปิดใช้ผลัด ' + escapeHtml(s.code) + ' อีกครั้ง">♻️</button>';
+    return '<article class="card' + (s.active ? '' : ' card-inactive') + '" data-id="' + escapeHtml(s.id) + '">' +
       '<div class="card-main">' +
         '<div class="card-title">' + chipHTML(s, false) + ' <span>' +
           escapeHtml(s.name || 'ผลัด ' + s.code) + '</span></div>' +
         '<div class="card-sub">' + sub + '</div>' +
       '</div>' +
-      '<div class="card-actions">' +
-        '<button type="button" class="icon-btn" data-action="edit" aria-label="แก้ไขผลัด ' + escapeHtml(s.code) + '">✏️</button>' +
-        '<button type="button" class="icon-btn danger" data-action="delete" aria-label="ลบผลัด ' + escapeHtml(s.code) + '">🗑️</button>' +
-      '</div>' +
+      '<div class="card-actions">' + actions + '</div>' +
     '</article>';
   }).join('');
 }
@@ -1215,9 +1244,12 @@ function saveShift(e) {
   const color = $('#shiftColor').value;
 
   if (!code) return invalidField('#shiftCode', 'กรุณากรอกรหัสผลัด');
-  const dup = state.shifts.some(function (x) {
+  const dup = state.shifts.find(function (x) {
     return x.id !== id && x.code.toLowerCase() === code.toLowerCase();
   });
+  if (dup && !dup.active) {
+    return invalidField('#shiftCode', 'รหัสนี้เป็นของผลัดที่ปิดใช้งานอยู่ กด ♻️ ที่การ์ดเดิมเพื่อเปิดใช้อีกครั้ง');
+  }
   if (dup) return invalidField('#shiftCode', 'รหัสผลัดนี้ถูกใช้แล้ว');
 
   if (!isOff) {
@@ -1241,7 +1273,7 @@ function saveShift(e) {
   if (existing) {
     Object.assign(existing, data);
   } else {
-    state.shifts.push(Object.assign({ id: uid() }, data));
+    state.shifts.push(Object.assign({ id: uid(), active: true }, data));
   }
   saveShifts();
   closeModal($('#modalShift'));
@@ -1251,22 +1283,42 @@ function saveShift(e) {
   return true;
 }
 
-// ลบผลัด (confirm + ลบ schedule ที่ใช้ผลัดนั้น)
+// ลบผลัด: ถ้ายังไม่เคยใช้ → ลบจริง / ถ้ามีในตารางงานแล้ว → ปิดใช้งาน (ประวัติยังอยู่)
 function deleteShift(id) {
   const s = getShift(id);
   if (!s) return;
   const count = countScheduleWhere(function (en) { return en.shiftId === id; });
-  const msg = 'ลบผลัด "' + shiftLabel(s) + '" ?\n' +
-    'ตารางงานที่ใช้ผลัดนี้ (' + count + ' รายการ) จะถูกลบด้วย';
-  if (!confirm(msg)) return;
 
-  state.shifts = state.shifts.filter(function (x) { return x.id !== id; });
-  removeScheduleWhere(function (en) { return en.shiftId === id; });
+  if (count === 0) {
+    if (!confirm('ลบผลัด "' + shiftLabel(s) + '" ?')) return;
+    state.shifts = state.shifts.filter(function (x) { return x.id !== id; });
+    saveShifts();
+    renderShifts();
+    renderSchedule();
+    showToast('ลบผลัดแล้ว');
+    return;
+  }
+
+  const msg = 'ผลัด "' + shiftLabel(s) + '" มีในตารางงาน ' + count + ' รายการ\n' +
+    'จะปิดใช้งานแทนการลบ: ประวัติเดิมยังอยู่ครบ แต่จะเลือกผลัดนี้ไม่ได้อีก\n' +
+    '(เปิดใช้อีกครั้งได้ที่หน้าผลัด)';
+  if (!confirm(msg)) return;
+  s.active = false;
   saveShifts();
-  saveSchedule();
   renderShifts();
   renderSchedule();
-  showToast('ลบผลัดแล้ว');
+  showToast('ปิดใช้งานผลัดแล้ว');
+}
+
+// เปิดใช้ผลัดที่ปิดไว้อีกครั้ง
+function restoreShift(id) {
+  const s = getShift(id);
+  if (!s) return;
+  s.active = true;
+  saveShifts();
+  renderShifts();
+  renderSchedule();
+  showToast('เปิดใช้ผลัดอีกครั้งแล้ว');
 }
 
 // ผูกอีเวนต์ของหน้าผลัด
@@ -1279,6 +1331,7 @@ function bindShifts() {
     if (!card) return;
     if (btn.dataset.action === 'edit') openShiftForm(card.dataset.id);
     else if (btn.dataset.action === 'delete') deleteShift(card.dataset.id);
+    else if (btn.dataset.action === 'restore') restoreShift(card.dataset.id);
   });
   $('#shiftForm').addEventListener('submit', saveShift);
   $('#shiftStart').addEventListener('change', autoTickOvernight);
@@ -1538,7 +1591,8 @@ function exportXLSX() {
   const shiftRows = state.shifts.map(function (s) {
     return {
       id: s.id, code: s.code, name: s.name, startTime: s.startTime, endTime: s.endTime,
-      color: s.color, overnight: s.overnight ? 1 : 0, otUntil: s.otUntil || '', isOff: s.isOff ? 1 : 0
+      color: s.color, overnight: s.overnight ? 1 : 0, otUntil: s.otUntil || '', isOff: s.isOff ? 1 : 0,
+      active: s.active ? 1 : 0
     };
   });
   const schedRows = buildScheduleRows();
@@ -1548,7 +1602,7 @@ function exportXLSX() {
     header: ['id', 'code', 'fullname', 'position', 'phone']
   }), 'Employees');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(shiftRows, {
-    header: ['id', 'code', 'name', 'startTime', 'endTime', 'color', 'overnight', 'otUntil', 'isOff']
+    header: ['id', 'code', 'name', 'startTime', 'endTime', 'color', 'overnight', 'otUntil', 'isOff', 'active']
   }), 'Shifts');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(schedRows, {
     header: ['date', 'employee_id', 'employee_code', 'employee_name', 'position', 'phone',
@@ -1749,7 +1803,8 @@ function findOrCreateShift(r, stats) {
     color: isOff ? '#95a5a6' : color,
     overnight: isOff ? false : (!!r.overnight || !!(start && end && end < start)),
     otUntil: isOff ? null : (normalizeTime(r.otUntil) || null),
-    isOff: isOff
+    isOff: isOff,
+    active: r.active === undefined || r.active === null || r.active === '' ? true : parseBool(r.active)
   };
   state.shifts.push(shift);
   stats.addedShift++;
@@ -1903,7 +1958,8 @@ function importXLSX(buffer) {
       color: str(pickField(r, ['color'])),
       overnight: parseBool(pickField(r, ['overnight'])),
       otUntil: normalizeTime(pickField(r, ['otuntil'])),
-      isOff: parseBool(pickField(r, ['isoff']))
+      isOff: parseBool(pickField(r, ['isoff'])),
+      active: pickField(r, ['active'])
     };
   });
   const schedRows = toObjs(wsC).map(schedRowFromObj);
